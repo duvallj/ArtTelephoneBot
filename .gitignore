@@ -1,0 +1,4 @@
+# Ignore Rust binaries
+/target
+# Ignore oauth token
+oauth2.tok
