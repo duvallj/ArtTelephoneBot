@@ -1,25 +1,17 @@
 mod commands;
+mod telephone;
 
-use std::{
-    collections::HashSet,
-    sync::Arc,
-    fs::File,
-    io::prelude::*,
-};
+use log::{error, info};
 use serenity::{
     client::bridge::gateway::ShardManager,
-    framework::{
-        StandardFramework,
-        standard::macros::group,
-    },
+    framework::{standard::macros::group, StandardFramework},
     model::{event::ResumedEvent, gateway::Ready},
     prelude::*,
 };
-use log::{error, info};
+use std::{collections::{HashMap, HashSet}, fs::File, io::prelude::*, sync::Arc};
 
-use commands::{
-    util::*,
-};
+use commands::{submit::*, util::*, create::*};
+use telephone::{ChainStorage};
 struct ShardManagerContainer;
 
 impl TypeMapKey for ShardManagerContainer {
@@ -39,17 +31,18 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping)]
+#[commands(ping, submit, create)]
 struct General;
 
 fn main() {
     simple_logger::init_with_level(log::Level::Debug).unwrap();
-    
+
     info!("Attempting to load token");
     // Configure bot with token read from file
     let mut file = File::open("oauth2.tok").expect("Error opening oauth2.tok");
     let mut token = String::new();
-    file.read_to_string(&mut token).expect("Error reading oauth2.tok");
+    file.read_to_string(&mut token)
+        .expect("Error reading oauth2.tok");
     // Trim newline from token, if it exists
     token = token.trim().to_string();
 
@@ -59,6 +52,7 @@ fn main() {
     {
         let mut data = client.data.write();
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));
+        data.insert::<ChainStorage>(HashMap::default());
     }
 
     // Ok so this is magic right here
@@ -68,15 +62,15 @@ fn main() {
             set.insert(info.owner.id);
 
             set
-        },
+        }
         Err(why) => panic!("Couldn't get application info: {:?}", why),
     };
 
-    client.with_framework(StandardFramework::new()
-        .configure(|c| c
-            .owners(owners)
-            .prefix("~"))
-        .group(&GENERAL_GROUP));
+    client.with_framework(
+        StandardFramework::new()
+            .configure(|c| c.owners(owners).prefix("~"))
+            .group(&GENERAL_GROUP),
+    );
 
     if let Err(why) = client.start() {
         error!("Client error: {:?}", why);
