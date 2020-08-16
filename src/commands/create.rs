@@ -6,6 +6,7 @@ use crate::telephone::{create_chain_in_map, ChainStorage};
 
 #[command]
 #[aliases("make", "new")]
+#[description = "Creates a new telephone chain"]
 fn create(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let name = args.single::<String>()?;
     {
@@ -20,5 +21,8 @@ fn create(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             }
         };
     }
+
+    let outmsg = format!("Successfully created chain \"{}\"!", name);
+    let _ = msg.channel_id.say(&ctx.http, outmsg);
     Ok(())
 }

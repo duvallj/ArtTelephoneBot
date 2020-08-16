@@ -4,14 +4,26 @@ mod telephone;
 use log::{error, info};
 use serenity::{
     client::bridge::gateway::ShardManager,
-    framework::{standard::macros::group, StandardFramework},
-    model::{event::ResumedEvent, gateway::Ready},
+    framework::{
+        standard::{
+            help_commands,
+            macros::{group, help},
+            Args, CommandGroup, CommandResult, HelpOptions,
+        },
+        StandardFramework,
+    },
+    model::{channel::Message, event::ResumedEvent, gateway::Ready, id::UserId},
     prelude::*,
 };
-use std::{collections::{HashMap, HashSet}, fs::File, io::prelude::*, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    io::prelude::*,
+    sync::Arc,
+};
 
-use commands::{submit::*, util::*, create::*};
-use telephone::{ChainStorage};
+use commands::{create::*, join::*, submit::*, util::*};
+use telephone::ChainStorage;
 struct ShardManagerContainer;
 
 impl TypeMapKey for ShardManagerContainer {
@@ -31,8 +43,28 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, submit, create)]
+#[commands(ping, submit, create, join)]
 struct General;
+
+#[help]
+#[individual_command_tip = "Welcome to the Art Telephone Bot Experience (c)(r)(tm)(patent pending)\n\
+If you would like more information about a specific command, pass the command name as an argument."]
+#[command_not_found_text = "Could not find command \"{}\"."]
+#[indention_prefix = "#"]
+#[lacking_permissions = "Hide"]
+#[lacking_role = "Hide"]
+#[wrong_channel = "Strike"]
+fn my_help(
+    context: &mut Context,
+    msg: &Message,
+    args: Args,
+    help_options: &'static HelpOptions,
+    groups: &[&'static CommandGroup],
+    owners: HashSet<UserId>,
+) -> CommandResult {
+    let _ = help_commands::with_embeds(context, msg, args, help_options, groups, owners);
+    Ok(())
+}
 
 fn main() {
     simple_logger::init_with_level(log::Level::Debug).unwrap();

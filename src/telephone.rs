@@ -17,7 +17,8 @@ pub struct Chain {
     open: bool,
     name: String,
     queue: VecDeque<UserId>,
-    created_in: ChannelId,
+    creator: UserId,
+    created_in_channel: ChannelId,
 }
 
 #[derive(Debug)]
@@ -87,14 +88,15 @@ pub fn add_to_chain_map(map: &mut ChainMap, name: &String, user: UserId) -> Chai
     add_to_chain(chain, user)
 }
 
-fn create_chain(name: &String, _user: UserId, created_in: ChannelId) -> ChainResult<Chain> {
+fn create_chain(name: &String, user: UserId, channel: ChannelId) -> ChainResult<Chain> {
     // TODO: let this be more configurable
     info!("Creating chain '{}'", name);
     Ok(Chain {
         open: true,
         name: name.clone(),
         queue: VecDeque::new(),
-        created_in: created_in,
+        creator: user,
+        created_in_channel: channel,
     })
 }
 
@@ -102,12 +104,12 @@ pub fn create_chain_in_map(
     map: &mut ChainMap,
     name: &String,
     user: UserId,
-    created_in: ChannelId,
+    channel: ChannelId,
 ) -> ChainResult<()> {
     if map.contains_key(name) {
         Err(ChainErrorType::AlreadyExists(name.clone()).into())
     } else {
-        let chain = create_chain(name, user, created_in)?;
+        let chain = create_chain(name, user, channel)?;
         let _ = map.insert(name.clone(), chain);
         Ok(())
     }

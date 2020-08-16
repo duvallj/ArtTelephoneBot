@@ -5,6 +5,7 @@ use serenity::{model::prelude::*, prelude::*};
 
 #[command]
 #[aliases("upload")]
+#[description = "Submits a picture to a telephone chain. Currently only supports raw attachments"]
 fn submit(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let name = args.single::<String>()?;
     if msg.attachments.len() == 0 {
